@@ -38,6 +38,7 @@ def refine_triangulated_coords(K, C1, R1, C2, R2, v1, v2, X0):
     v2_homog = homogenize_coords(v2)
 
     # Construct projection matrices
+    print("C1 shape before reshape:", C1.shape)
     T1 = -R1 @ C1.reshape(-1, 1)
     P1 = K @ np.hstack((R1, T1))
     T2 = -R2 @ C2.reshape(-1, 1)

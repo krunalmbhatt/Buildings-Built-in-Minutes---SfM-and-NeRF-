@@ -54,3 +54,48 @@ def cameraPose(E):
             Final_R.append(R)
 
     return Final_R, Final_C
+
+import numpy as np
+
+
+def get_rotation_matrix_from_svd(U, Vt):
+    # Making sure the rotation matrix has a determinant of 1
+    R = np.dot(U, Vt)
+    if np.linalg.det(R) < 0:
+        # If the determinant is -1, invert the sign to ensure a right-handed coordinate system
+        U[:, -1] *= -1
+        R = np.dot(U, Vt)
+    return R
+
+def cameraPose(E):
+    W = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+    U, _, Vt = np.linalg.svd(E)
+
+    # Ensure U and Vt have right determinant
+    if np.linalg.det(U) < 0:
+        U *= -1
+    if np.linalg.det(Vt) < 0:
+        Vt *= -1
+
+    # Four possible choices for camera pose
+    C1 = U[:, 2]
+    C2 = -U[:, 2]
+    R1 = get_rotation_matrix_from_svd(U, np.dot(W, Vt))
+    R2 = get_rotation_matrix_from_svd(U, np.dot(W.T, Vt))
+
+    # Assembling all possible configurations
+    Cs = [C1.reshape(-1, 1), C2.reshape(-1, 1), C1.reshape(-1, 1), C2.reshape(-1, 1)]
+    Rs = [R1, R1, R2, R2]
+
+    # Convert to numpy arrays to ensure compatibility with other operations
+    Cs = [np.array(C).reshape(3, 1) for C in Cs]
+    Rs = [np.array(R).reshape(3, 3) for R in Rs]
+
+    return Cs, Rs
+
+
+# # Example usage
+# E = np.random.rand(3, 3)  # Example Essential matrix, replace with actual computation
+# Rs, Cs = cameraPose(E)
+# print("Rotation Matrices:", Rs)
+# print("Translation Vectors:", Cs)

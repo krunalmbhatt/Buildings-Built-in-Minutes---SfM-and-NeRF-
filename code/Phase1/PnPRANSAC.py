@@ -8,9 +8,11 @@ This file contains the code for PnP with RANSAC
 import numpy as np
 from LinearPnP import linear_pnp
 from utils.helpers import homogenize_coords
+import random
 
 def PnP_RANSAC(features, world_points, K, max_iters=1000, threshold=1e-4):
     # Homogenize world points once before the loop
+    #print(world_points)
     world_points_h = homogenize_coords(world_points)
     
     # Store the best inliers as a boolean mask
@@ -19,7 +21,9 @@ def PnP_RANSAC(features, world_points, K, max_iters=1000, threshold=1e-4):
 
     for i in range(max_iters):
         # Randomly choose 6 correspondences
-        indices = np.random.choice(len(features), 6, replace=False)
+        #indices = random.sample(range(features.shape[0]-1), 6)
+        indices = np.random.choice(len(world_points), 6, replace=False)
+        print(indices)
         chosen_features = features[indices]
         chosen_world_points = world_points[indices]
 
