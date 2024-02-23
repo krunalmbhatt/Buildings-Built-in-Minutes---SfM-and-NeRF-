@@ -73,7 +73,7 @@ class SFMDataStructure():
             file_name = match_file.rsplit(".", 1)[0][-1]
             match_file_names.append(file_name)
 
-        matching_files = ['./Data/matching1.txt', './Data/matching2.txt', './Data/matching3.txt', './Data/matching4.txt']
+        matching_files = ['../data/matching1.txt', '../data/matching2.txt', '../data/matching3.txt', '../data/matching4.txt']
         match_file_names = ['1','2','3','4']
 
         num_images = len(match_file_names) + 1

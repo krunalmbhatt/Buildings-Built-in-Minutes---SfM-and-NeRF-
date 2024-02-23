@@ -13,6 +13,8 @@ from EstimateFundamentalMatrix import *
 import random
 from utils import *
 
+random.seed(42)
+
 def getInliersRANSAC(v1, v2, iterations, threshold):
     """
     This function will use RANSAC to get the inliers from the set of matching points in two images

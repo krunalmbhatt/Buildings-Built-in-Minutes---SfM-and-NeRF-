@@ -27,31 +27,37 @@ def linear_pnp(features, world_points, K):
     u, v = features.T
 
     # Construct matrix A for the linear system
-    A1 = np.hstack([X.reshape(-1, 1), Y.reshape(-1, 1), Z.reshape(-1, 1), ones, zeros, zeros, zeros, zeros,
-                    -u.reshape(-1, 1) * X.reshape(-1, 1), -u.reshape(-1, 1) * Y.reshape(-1, 1), -u.reshape(-1, 1) * Z.reshape(-1, 1), -u.reshape(-1, 1)])
-    A2 = np.hstack([zeros, zeros, zeros, zeros, X.reshape(-1, 1), Y.reshape(-1, 1), Z.reshape(-1, 1), ones,
-                    -v.reshape(-1, 1) * X.reshape(-1, 1), -v.reshape(-1, 1) * Y.reshape(-1, 1), -v.reshape(-1, 1) * Z.reshape(-1, 1), -v.reshape(-1, 1)])
+    # A1 = np.hstack([X.reshape(-1, 1), Y.reshape(-1, 1), Z.reshape(-1, 1), ones, zeros, zeros, zeros, zeros,
+    #                 -u.reshape(-1, 1) * X.reshape(-1, 1), -u.reshape(-1, 1) * Y.reshape(-1, 1), -u.reshape(-1, 1) * Z.reshape(-1, 1), -u.reshape(-1, 1)])
+    A1 = np.vstack([X, Y, Z, ones, zeros, zeros, zeros, zeros,
+                    -u * X, -u * Y, -u * Z, -u]).T # N x 12
+    # A2 = np.hstack([zeros, zeros, zeros, zeros, X.reshape(-1, 1), Y.reshape(-1, 1), Z.reshape(-1, 1), ones,
+    #                 -v.reshape(-1, 1) * X.reshape(-1, 1), -v.reshape(-1, 1) * Y.reshape(-1, 1), -v.reshape(-1, 1) * Z.reshape(-1, 1), -v.reshape(-1, 1)])
+    A2 = np.vstack([zeros, zeros, zeros, zeros, X, Y, Z, ones,
+                    -v * X, -v * Y, -v * Z, -v]).T 
     A = np.vstack([A1, A2])
 
     # Solve the system using SVD
-    _, _, V = np.linalg.svd(A)
-    P = V[-1, :].reshape((3, 4))
+    _, S_A, V_A = np.linalg.svd(A)
+    P = V_A[np.argmin(S_A),:].reshape((3, 4))
 
     # Decompose the projection matrix to get R and T
     M = P[:, :3]  # Extract the left 3x3 submatrix
     R = np.linalg.inv(K) @ M  # Adjust R with the inverse of intrinsic parameters
-    T = np.linalg.inv(K) @ P[:, 3]
 
     # Ensure R is a proper rotation matrix
-    U, _, Vt = np.linalg.svd(R)
-    R = U @ Vt
-    scale = np.linalg.norm(R, axis=0)[0]
-    T = T / scale
+    UR, SR, VR = np.linalg.svd(R)
+    
+    scale = SR[0]
+    R = UR @ VR
 
-    if np.linalg.det(R) < 0:
+    detR = np.linalg.det(R)
+    T = np.linalg.inv(K) @ P[:, 3] / scale
+
+    if detR < 0:
         R = -R
         T = -T
-
+    
     # Compute camera center C in world coordinates
     C = -R.T @ T
 

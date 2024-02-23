@@ -27,6 +27,8 @@ def compute_residuals(X, v1, v2, P1, P2, feature_point_index):
     error_1 = reprojection_error(v1[feature_point_index], X, P1)
     error_2 = reprojection_error(v2[feature_point_index], X, P2)
     errors = np.concatenate((error_1, error_2))  # Aggregate errors from both views
+    print("Error 1", error_1)
+    print("Error 2", error_2)
     return errors
 
 def refine_triangulated_coords(K, C1, R1, C2, R2, v1, v2, X0):

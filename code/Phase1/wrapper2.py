@@ -141,8 +141,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Project 2: SfM and NeRF')
-    parser.add_argument('--basePath', default='Data/')
-    parser.add_argument('--calibrationFile', default='Data/calibration.txt')
+    parser.add_argument('--basePath', default='../data/')
+    parser.add_argument('--calibrationFile', default='../data/calibration.txt')
     args = parser.parse_args()
     main(args)
     
