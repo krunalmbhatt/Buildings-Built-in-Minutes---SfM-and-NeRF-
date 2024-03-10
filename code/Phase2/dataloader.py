@@ -1,12 +1,12 @@
-################ BUILDINGS BUILT IN MINUTES #################
-## RBE 549 - Computer Vision
-## Under Guidance of Prof. Nitin Sanket
+# ################ BUILDINGS BUILT IN MINUTES #################
+# ## RBE 549 - Computer Vision
+# ## Under Guidance of Prof. Nitin Sanket
 
 
-## DATE : March 4, 2024
-## WRITTEN BY : Krunal M Bhatt
+# ## DATE : March 4, 2024
+# ## WRITTEN BY : Krunal M Bhatt
 
-## This file contains the dataloader for the dataset. It is a simple dataloader that uses the PyTorch's DataLoader
+# ## This file contains the dataloader for the dataset. It is a simple dataloader that uses the PyTorch's DataLoader
 
 
 import matplotlib.pyplot as plt
@@ -14,7 +14,9 @@ import matplotlib.image as mpimg
 import json
 import numpy as np
 import torch
+import os
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #######################################################
 #################LOAD THE JSON FILE####################
 #######################################################
@@ -61,6 +63,8 @@ def display_image_and_details(data, image_id):
 
 # Example usage
 json_file_path = './nerf_synthetic/lego/transforms_train.json'  # Update this to your JSON file's path
+images = './nerf_synthetic/lego/train/' # Update this to your train image file's path
+
 data = load_data(json_file_path)
 
 # # Display images and details one by one or for a specific range
@@ -79,7 +83,7 @@ def extract_transformations_corrected(data):
     transform_matrices = [np.array(frame['transform_matrix']) for frame in data['frames']]
     origins = np.array([mat[:3, 3] for mat in transform_matrices])
     directions = - np.array([mat[:3, 2] for mat in transform_matrices])  # Camera looking direction in -Z
-    return origins, directions
+    return origins, directions, 
 
 # Plot the directions and origins in a 3D quiver plot
 def plot_3d_quiver(origins, directions):
@@ -100,10 +104,42 @@ plot_3d_quiver(origins_corrected, directions_corrected)
 
 
 #######################################################
+############CALCULATE POSE AND FOCAL LENGTH############
+#######################################################
+
+def get_pose_and_focal_length(data, image_width):
+    camera_angle_x = data['camera_angle_x']
+    focal_length = image_width / (2 * np.tan(camera_angle_x / 2))    # focal_length = width / (2 * tan(fov/2))
+    
+    poses = []
+    for frame in data['frames'][0:100]:  # the first 100 images
+        transform_matrix = np.array(frame['transform_matrix'])
+        # The camera position is the translation part of the matrix
+        camera_position = transform_matrix[:3, 3]
+        # The rotation matrix could be directly used as the orientation
+        rotation_matrix = transform_matrix[:3, :3]
+        poses.append((camera_position, rotation_matrix))
+    
+    return poses, focal_length
+
+width = 800  
+height = 800
+poses, focal_length = get_pose_and_focal_length(data, width)
+print(f"Focal length: {focal_length:.2f}")
+print(f"Number of poses: {len(poses)}")
+
+#######################################################
+###############Extract Transformation##################
+#######################################################
+def extract_transform_matrices(data):
+    transform_matrices = [frame['transform_matrix'] for frame in data['frames']]
+    return torch.tensor(transform_matrices, dtype=torch.float32)
+
+#######################################################
 ###############COMPUTE RAYS USING PYTORCH##############
 #######################################################
 
-def compute_rays_torch(height, width, focal_length, transform_matrix):
+def compute_rays_torch(height, width, focal_length, transform_matrices):
     """
     Compute the origins and directions of rays for each pixel in an image using PyTorch.
 
@@ -111,11 +147,11 @@ def compute_rays_torch(height, width, focal_length, transform_matrix):
     - height: The height of the image, as an int.
     - width: The width of the image, as an int.
     - focal_length: The focal length of the camera, as a float or tensor.
-    - transform_matrix: The camera-to-world transformation matrix, as a tensor of shape [4, 4].
+    - transform_matrices: The camera-to-world transformation matrices, as a tensor of shape [batch_size, 4, 4].
 
     Returns:
-    - ray_origins: The origins of the rays in world coordinates, as a tensor of shape [height, width, 3].
-    - ray_directions: The normalized directions of the rays in world coordinates, as a tensor of shape [height, width, 3].
+    - ray_origins: The origins of the rays in world coordinates, as a tensor of shape [batch_size, height, width, 3].
+    - ray_directions: The normalized directions of the rays in world coordinates, as a tensor of shape [batch_size, height, width, 3].
     """
     # Meshgrid for pixel coordinates
     i, j = torch.meshgrid(torch.arange(width, dtype=torch.float32), 
@@ -126,13 +162,32 @@ def compute_rays_torch(height, width, focal_length, transform_matrix):
     z = -torch.ones_like(x)
 
     # Directions in camera coordinates
-    directions_camera = torch.stack([x, y, z], dim=-1)
-    directions_camera /= torch.norm(directions_camera, dim=-1, keepdim=True)
+    directions = torch.stack([x, y, z], dim=-1)
+    # Normalize directions
+    directions /= torch.linalg.norm(directions, dim=-1, keepdim=True)
 
-    # Transform directions to world space
-    ray_directions = torch.einsum('hwk,kl->hwl', directions_camera, transform_matrix[:3, :3])
+    # Select the translation part of each matrix
+    translation = transform_matrices[:, :3, 3]
+    # Reshape the tensor to [batch_size, 1, 1, 3]
+    ray_origins = translation.unsqueeze(1).unsqueeze(2).expand(-1, height, width, 3)
 
-    # Ray origins: camera position in world space
-    ray_origins = transform_matrix[:3, 3].expand(height, width, 3)
+    # Compute ray directions in world coordinates
+    ray_directions = torch.einsum('bijk,bkl->bijl', directions.expand(transform_matrices.size(0), -1, -1, -1), transform_matrices[:, :3, :3])
 
     return ray_origins, ray_directions
+
+
+transform_matrices = extract_transform_matrices(data)
+
+with torch.no_grad():
+    ray_origin, ray_direction = compute_rays_torch(height, width, focal_length, transform_matrices)
+
+print(f"Ray origins shape: {ray_origin.shape}")
+print(ray_origin[50,height // 2, width // 2, :])    # image, pixel_h, pixel_w, 3
+# print(ray_origin)
+print('')
+print(f"Ray directions shape: {ray_direction.shape}")
+print(ray_direction[50,height // 2, width // 2, :])
+# print(ray_direction)
+print('')
+
