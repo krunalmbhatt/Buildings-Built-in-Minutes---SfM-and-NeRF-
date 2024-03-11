@@ -48,28 +48,27 @@ class vanillaNeRF(nn.Module):
     
 
 class positionEncoder(nn.Module):
-    def __init__(self, input_ch = 3, freq = 10, log_scale = True):
+    def __init__(self, input_ch: int = 3, freq: int = 10, log_scale: bool = True):
         super(positionEncoder, self).__init__()
         self.freq = freq
         self.input_ch = input_ch
         self.encoder_function = [torch.sin, torch.cos]
         self.output_ch = input_ch * (len(self.encoder_function)*freq+1)
         if log_scale:
-            self.freq_bands = 2.0 ** torch.linspace(0.0, freq - 1, freq)
+            self.freq_band = 2.0 ** torch.linspace(0, freq - 1, freq)
         else:
-            self.freq_bands = torch.linspace(1, 2.0 ** (freq - 1), freq)
+            self.freq_band = torch.linspace(1, 2**(freq - 1), freq)
 
     def forward(self, x):
         output = [x]
-        for f in self.freq_bands:
+        for freq in self.freq_band:
             for func in self.encoder_function:
-                output.append(func(f * x))
-
+                output.append(func(freq * x))
         return torch.cat(output, -1)
     
     def num_out_ch(self):
         return self.output_ch
     
 def apply_PE(input_tensor, input_ch=3, freq=10, log_scale=True):
-    encoded_img = positionEncoder(input_ch, freq, log_scale)
+    encoded_img = positionEncoder(input_ch=input_ch, freq=freq, log_scale=log_scale)
     return encoded_img(input_tensor)

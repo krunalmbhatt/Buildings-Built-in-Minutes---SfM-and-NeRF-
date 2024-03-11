@@ -27,7 +27,6 @@ def main():
     batch_size = 1024
     epochs = 10
     learning_rate = 1e-4
-    # n_samples = 1000
     output_ch = 4
     input_size = 3
     width = 256
@@ -49,7 +48,7 @@ def main():
     model = vanillaNeRF(depth, width, input_size, output_ch).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr = learning_rate)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 45000, gamma = 0.1)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 450000, gamma = 0.1)
 
     loss_fn = torch.nn.MSELoss()
     epoch = 0

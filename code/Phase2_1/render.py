@@ -17,7 +17,6 @@ class volumeRender(torch.nn.Module):
         self.whitebg = white_bg
         e = torch.tensor([1e10]).to(device)
         e.requires_grad = False
-        self.need_grad = False
         self.register_buffer('e', e)
         self.att_threshold = att_threshold
 
@@ -49,7 +48,7 @@ class volumeRender(torch.nn.Module):
         sigma_a = torch.nn.functional.relu(rad_field[..., 3] + noise)
 
         alpha = 1 - torch.exp(-sigma_a * diff)          #alpha is the accumulated transparency
-        T_i = cumprod_exclusive(alpha + self.e)   #torch.cumprod(alpha + self.epsilon, dim = -1), t_i is the accumulated transmittance
+        T_i = cumprod_exclusive(1-alpha + 1e-10)   #torch.cumprod(alpha + self.epsilon, dim = -1), t_i is the accumulated transmittance
         weight = alpha * T_i                           #weight is the accumulated color
 
         mask = (T_i >  self.att_threshold).float()      #mask is the accumulated mask
@@ -67,7 +66,11 @@ class volumeRender(torch.nn.Module):
         if self.whitebg:
             color_map = color_map + (1.0 - acc_map[..., None])
 
-        out = {'color_map': color_map, 'depth_map': depth_map, 'weight': weight, 'mask': mask, 'acc_map': acc_map, 'display_map': display_map}
+        out = {'color_map': color_map, 
+               'depth_map': depth_map, 
+               'weight': weight, 
+               'mask': mask, 
+               'acc_map': acc_map, 'display_map': display_map}
         
         return out
     

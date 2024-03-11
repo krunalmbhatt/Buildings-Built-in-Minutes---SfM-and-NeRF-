@@ -38,10 +38,11 @@ def frames_from_data(frames):                       # Get Frame Data
 
 def ray_direction(width, height, focal_length):         #Get Ray Direction
     x_coords, y_coords = torch.meshgrid(torch.linspace(0, width - 1, width), 
-                                        torch.linspace(0, height - 1, height), indexing='xy')
-    directions = torch.stack([(x_coords - width / 2) / focal_length, 
-                              -(y_coords - height / 2) / focal_length, 
-                              -torch.ones_like(x_coords)], dim=-1)
+                                        torch.linspace(0, height - 1, height))
+    x = x_coords.t()
+    y = y_coords.t()
+    directions = torch.stack([(x - width *0.5)/focal_length, -(y - height*0.5)/focal_length, -torch.ones_like(x)], dim=-1)
+
     print("directions: ", directions)
     print("directions.shape: ", directions.shape)
     print('')
@@ -85,7 +86,8 @@ class SyntheticNeRFDataset(Dataset):
             img = img[:, :3] * img[:, -1:] + (1 - img[:, -1:])
             self.images.append(img)
             ray_o, ray_d = calculate_rays(pose, self.directions)
-            self.rays.append(torch.cat([ray_o, ray_d, self.range[0]*torch.ones_like(ray_o[:, :1]), self.range[1]*torch.ones_like(ray_o[:, :1])], dim=1))
+            self.rays.append(torch.cat([ray_o, ray_d, self.range[0]*torch.ones_like(ray_o[:, :1]), self.range[1]*torch.ones_like(ray_o[:, :1])], 1))
+        
         self.rays = torch.cat(self.rays, dim=0)
         self.images = torch.cat(self.images, dim=0)
 
