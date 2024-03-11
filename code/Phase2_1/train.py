@@ -1,6 +1,6 @@
 import torch
 import cv2
-
+import os
 import numpy as np
 import torch.nn.functional as F
 import torch.optim as optim
@@ -24,10 +24,10 @@ def main():
     ####################
 
     # batch_size = 32
-    batch_size = 600
-    epochs = 100
+    batch_size = 1024
+    epochs = 10
     learning_rate = 1e-4
-    n_samples = 1000
+    # n_samples = 1000
     output_ch = 4
     input_size = 3
     width = 256
@@ -54,11 +54,15 @@ def main():
     loss_fn = torch.nn.MSELoss()
     epoch = 0
 
+    checkpoint_dir = './Phase2_1/checkpoints'
+    checkpoint_filename = 'epoch_{}.pth'.format(epoch)
+    checkpoint_path = os.path.join(checkpoint_dir, checkpoint_filename)
+
     ############################
-    ###### Training Loop ######
+    ###### Training Loop ###### 
     ############################
 
-    while epoch < epochs:
+    while epoch < 10:
         b_time = time.time()
         condtition = False
         with tqdm(total = n_rays, unit= 'rays') as pbar:
@@ -66,35 +70,46 @@ def main():
                 # print(dat)
                 rays = dat['rays'].to(device)
                 images = dat['imgs'].to(device)
+                # assert not torch.isnan(rays).any(), "NaNs in rays"
+                # assert not torch.isnan(images).any(), "NaNs in images"
                 renderings = step_train(rays, images, n_samplePoints = 256, model= model)
                 # print(renderings)
                 rendered_img = renderings['color_map']
-
+                # print("RENSEREDDFSFS", rendered_img)
                 loss = loss_fn(rendered_img, images)
                 rendered_img.detach()
                 optimizer.zero_grad()
                 loss.backward()
+                # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=1.0)
                 optimizer.step()
                 scheduler.step()
                 loss = loss.item()
-                pbar.update()
-        torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'loss': loss}, 
-                   './checkpoints/epoch_{}.pth'.format(epoch))
+                pbar.update()      
+
+
+        # torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'loss': loss}, 
+        #            './Phase2_1/checkpoints/epoch_{}.pth'.format(epoch))
+        if not os.path.exists(checkpoint_dir):
+            try:
+                os.makedirs(checkpoint_dir)
+            except OSError as e:
+                # If the directory could not be created, use the present working directory
+                print("Directory could not be created, saving in the present working directory.")
+                checkpoint_path = checkpoint_filename
+
+        # Save the checkpoint
+        torch.save({'epoch': epoch, 
+                    'model_state_dict': model.state_dict(), 
+                    'optimizer_state_dict': optimizer.state_dict(), 
+                    'loss': loss}, checkpoint_path)
+
         epoch += 1
         print('Epoch: {} Loss: {} Time: {}'.format(epoch, loss, time.time()-b_time))
         delta_t = time.time()-b_time
         tqdm.write('Training ended in {}'.format(delta_t))
 
 
-        ############################
-        ####### Testing Loop #######
-        ############################
-
-        test_path = './nerf_synthetic/lego/transforms_test.json'
-        test_dataset = SyntheticNeRFDataset()
-
-
-
-
 if __name__ == '__main__':
     main()
+

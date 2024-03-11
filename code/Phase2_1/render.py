@@ -10,7 +10,7 @@ def cumprod_exclusive(tensor: torch.Tensor) -> torch.Tensor:
     return val
 
 class volumeRender(torch.nn.Module):
-    def __init__(self, train_radiance_noise = 0, val_radiance_noise = 0, white_bg = False, att_threshold=1e-3, device='cuda', **kwargs):
+    def __init__(self, train_radiance_noise = 0, val_radiance_noise = 0, white_bg = True, att_threshold=1e-3, device='cuda', **kwargs):
         super().__init__()
         self.train_radiance_noise = train_radiance_noise
         self.val_radiance_noise = val_radiance_noise
@@ -63,6 +63,7 @@ class volumeRender(torch.nn.Module):
         display_map = 1/ torch.max(1e-10*torch.ones_like(depth_map), depth_map/acc_map)  #display map is the accumulated depth map divided by accumulated weight        
         display_map[torch.isnan(display_map)] = 0
 
+
         if self.whitebg:
             color_map = color_map + (1.0 - acc_map[..., None])
 
@@ -101,7 +102,6 @@ def step_train(ray, images, n_samplePoints, model):
     sample_pts, ray_d_exp, pt_interval = calc_sample_pts(ray_origin, ray_dir, near, far, n_samplePoints)
     out = model(sample_pts, ray_d_exp)
     rendered = renderer(out, pt_interval, ray_dir)
-
     return rendered
 
 def fetch_model():

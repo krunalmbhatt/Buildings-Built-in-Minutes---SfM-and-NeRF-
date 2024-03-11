@@ -24,7 +24,11 @@ def frames_from_data(frames):                       # Get Frame Data
     image_path = frames['file_path']
     image_path = image_path.replace('.','')
     image_data = image_data + image_path + '.png'
-    img = Image.open(image_data).resize((400, 400), Image.LANCZOS)  
+    img = Image.open(image_data)
+    img  = img.resize((400, 400), Image.LANCZOS)  
+    # cv2.imshow('image',np.array(img))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return pose, img
 
@@ -38,6 +42,9 @@ def ray_direction(width, height, focal_length):         #Get Ray Direction
     directions = torch.stack([(x_coords - width / 2) / focal_length, 
                               -(y_coords - height / 2) / focal_length, 
                               -torch.ones_like(x_coords)], dim=-1)
+    print("directions: ", directions)
+    print("directions.shape: ", directions.shape)
+    print('')
     return directions    
 
 def calculate_rays(pose, directions):                #get Rays
@@ -46,6 +53,7 @@ def calculate_rays(pose, directions):                #get Rays
     ray_o = pose[:, 3].expand(directions.shape)
     ray_d = directions.view(-1, 3)
     ray_o = ray_o.view(-1, 3)
+    
     return ray_o, ray_d
 
 

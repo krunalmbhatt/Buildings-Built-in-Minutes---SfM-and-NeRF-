@@ -30,13 +30,20 @@ class vanillaNeRF(nn.Module):
                 x = F.relu(self.fc3(x))
             else:
                 x = F.relu(self.fc2(x))
-
-        sigma = torch.relu(self.sigma(x)).to(sample_pts.device)
-        x = self.fc2(x) 
-        x_dir = torch.cat((x, sample_dir), -1).to(sample_pts.device)
+        print("x after for loop",x)
+        sigma = self.sigma(x).to(sample_pts.device)
+        x = self.fc2(x)
+        print("x after fc2", x) 
+        x_dir = torch.cat([x, sample_dir], -1).to(sample_pts.device)
+        print("x_dir", x_dir)
         x = F.relu(self.direction(x_dir))
+        print("after dir", x)
         x = F.relu(self.output(x))
-        x = torch.cat((x, sigma), -1)
+        print("after output", x)
+        x = torch.cat([x, sigma], -1)
+        
+        print("x from network: ", x)
+        print("X shape: ", x.shape)
         return x
     
 
@@ -50,7 +57,7 @@ class positionEncoder(nn.Module):
         if log_scale:
             self.freq_bands = 2.0 ** torch.linspace(0.0, freq - 1, freq)
         else:
-            self.freq_bands = torch.linspace(2.0 ** 0.0, 2.0 ** (freq - 1), freq)
+            self.freq_bands = torch.linspace(1, 2.0 ** (freq - 1), freq)
 
     def forward(self, x):
         output = [x]
@@ -64,4 +71,5 @@ class positionEncoder(nn.Module):
         return self.output_ch
     
 def apply_PE(input_tensor, input_ch=3, freq=10, log_scale=True):
-    return positionEncoder(input_ch, freq, log_scale)(input_tensor)
+    encoded_img = positionEncoder(input_ch, freq, log_scale)
+    return encoded_img(input_tensor)
