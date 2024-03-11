@@ -12,6 +12,8 @@ from nerfnetwork import vanillaNeRF
 from render import step_train, fetch_model
 from tqdm import tqdm
 import time
+from torch.utils.tensorboard import SummaryWriter
+
 
 if torch.cuda.is_available():
     device = torch.device('cuda')
@@ -57,6 +59,8 @@ def main():
     checkpoint_filename = 'epoch_{}.pth'.format(epoch)
     checkpoint_path = os.path.join(checkpoint_dir, checkpoint_filename)
 
+    writer = SummaryWriter('runs/nerf_training')
+
     ############################
     ###### Training Loop ###### 
     ############################
@@ -86,6 +90,9 @@ def main():
                 loss = loss.item()
                 pbar.update()      
 
+                # Log training loss to TensorBoard
+                writer.add_scalar('Training Loss', loss, epoch)
+
 
         # torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict(), 'loss': loss}, 
         #            './Phase2_1/checkpoints/epoch_{}.pth'.format(epoch))
@@ -107,7 +114,7 @@ def main():
         print('Epoch: {} Loss: {} Time: {}'.format(epoch, loss, time.time()-b_time))
         delta_t = time.time()-b_time
         tqdm.write('Training ended in {}'.format(delta_t))
-
+    writer.close()
 
 if __name__ == '__main__':
     main()
