@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class vanillaNeRF(nn.Module):
-    def __init__(self, depth=8, width=256, input_size=3, output_ch=4):
+    def __init__(self, depth=8, width=256, input_size=3):
         super(vanillaNeRF, self).__init__()
         self.depth = depth
         self.width = width
