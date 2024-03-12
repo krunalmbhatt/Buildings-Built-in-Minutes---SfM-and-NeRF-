@@ -30,20 +30,30 @@ class vanillaNeRF(nn.Module):
                 x = F.relu(self.fc3(x))
             else:
                 x = F.relu(self.fc2(x))
-        print("x after for loop",x)
+        
+        # print("x after for loop",x)
         sigma = self.sigma(x).to(sample_pts.device)
+        
         x = self.fc2(x)
-        print("x after fc2", x) 
+        
+        # print("x after fc2", x) 
+        
         x_dir = torch.cat([x, sample_dir], -1).to(sample_pts.device)
-        print("x_dir", x_dir)
+        
+        # print("x_dir", x_dir)
+        
         x = F.relu(self.direction(x_dir))
-        print("after dir", x)
+
+        # print("after dir", x)
+        
         x = F.relu(self.output(x))
-        print("after output", x)
+        
+        # print("after output", x)
+        
         x = torch.cat([x, sigma], -1)
         
-        print("x from network: ", x)
-        print("X shape: ", x.shape)
+        # print("x from network: ", x)
+        # print("X shape: ", x.shape)
         return x
     
 

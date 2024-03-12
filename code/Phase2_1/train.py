@@ -13,26 +13,39 @@ from render import step_train, fetch_model
 from tqdm import tqdm
 import time
 from torch.utils.tensorboard import SummaryWriter
-
+import argparse
 
 if torch.cuda.is_available():
     device = torch.device('cuda')
 else:
     device = torch.device('cpu')
 
+def get_args():
+    parser = argparse.ArgumentParser(description='Train a NeRF model on synthetic data.')
+    parser.add_argument('--batch_size', type=int, default=1024, help='input batch size for training (default: 1024)')
+    parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train (default: 10)')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate (default: 1e-4)')
+    parser.add_argument('--output_ch', type=int, default=4, help='output channels (default: 4)')
+    parser.add_argument('--input_size', type=int, default=3, help='input size (default: 3)')
+    parser.add_argument('--width', type=int, default=256, help='network width (default: 256)')
+    parser.add_argument('--depth', type=int, default=8, help='network depth (default: 8)')
+    return parser.parse_args()
+
 def main():
+    
+    args = get_args()
+
     ####################
     ### Hyperparams ####
     ####################
 
-    # batch_size = 32
-    batch_size = 1024
-    epochs = 10
-    learning_rate = 1e-4
-    output_ch = 4
-    input_size = 3
-    width = 256
-    depth = 8
+    batch_size = args.batch_size
+    epochs = args.epochs
+    learning_rate = args.learning_rate
+    output_ch = args.output_ch
+    input_size = args.input_size
+    width = args.width
+    depth = args.depth
 
     ###########################
     ###### Loading files ######

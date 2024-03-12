@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
-
+from utils import *
 
 ####################
 #### Load JSON #####
@@ -31,31 +31,6 @@ def frames_from_data(frames):                       # Get Frame Data
     # cv2.destroyAllWindows()
 
     return pose, img
-
-######################
-#### Ray Direction####
-######################
-
-def ray_direction(width, height, focal_length):         #Get Ray Direction
-    x_coords, y_coords = torch.meshgrid(torch.linspace(0, width - 1, width), 
-                                        torch.linspace(0, height - 1, height))
-    x = x_coords.t()
-    y = y_coords.t()
-    directions = torch.stack([(x - width *0.5)/focal_length, -(y - height*0.5)/focal_length, -torch.ones_like(x)], dim=-1)
-
-    print("directions: ", directions)
-    print("directions.shape: ", directions.shape)
-    print('')
-    return directions    
-
-def calculate_rays(pose, directions):                #get Rays
-    directions = directions@pose[:, :3].T
-    directions = directions / torch.norm(directions, dim=-1, keepdim=True)
-    ray_o = pose[:, 3].expand(directions.shape)
-    ray_d = directions.view(-1, 3)
-    ray_o = ray_o.view(-1, 3)
-    
-    return ray_o, ray_d
 
 
 ######################

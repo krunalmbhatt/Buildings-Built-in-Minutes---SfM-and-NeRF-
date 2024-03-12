@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-
+from utils import *
 from nerfnetwork import vanillaNeRF
 
 def cumprod_exclusive(tensor: torch.Tensor) -> torch.Tensor:
@@ -74,28 +74,10 @@ class volumeRender(torch.nn.Module):
         
         return out
     
-
-def calc_sample_pts(ray_origin, ray_dir, near, far, n_samples):
-    interval = torch.linspace(0.0, 1.0, steps = n_samples, requires_grad=False).to(ray_origin.device)
-    n_ray = ray_origin.shape[0]
-
-    interval = interval.unsqueeze(0)
-    near = near.unsqueeze(1)
-    far = far.unsqueeze(1)
-
-    pt_interval = near + interval * (far - near)
-
-    pertub = torch.rand_like(pt_interval) 
-    pertub = (pertub - 0.5) * (far - near) / n_samples
-    pertub[:,0] = 0
-    pt_interval = pt_interval + pertub
-    pt_interval = torch.reshape(pt_interval, (n_ray, -1))
-
-    sample_pts = ray_origin.unsqueeze(1) + ray_dir.unsqueeze(1) * pt_interval.unsqueeze(-1)
-    ray_dir = ray_dir.unsqueeze(1).expand(-1, n_samples, -1)
-
-    return sample_pts, ray_dir, pt_interval
-
+#######################
+#### Training Step ####
+#######################
+    
 def step_train(ray, images, n_samplePoints, model):
     ray_origin = ray[:,0:3]
     ray_dir = ray[:,3:6]

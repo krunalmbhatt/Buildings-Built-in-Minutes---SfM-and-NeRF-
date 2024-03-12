@@ -91,7 +91,6 @@ def main():
             gen_imgs.append(output_img)
             output_img = []
         
-        # print(i)
     print('halfway there')
     i = 0
     for g in gen_imgs:
@@ -121,15 +120,6 @@ def main():
 
         i +=1
         image_bool = False
-        
-
-    # rendered_op = rendered_op.cpu().detach()
-    # rendered_op = rendered_op.view(800,800,3)
-    # rendered_op = rendered_op.numpy()
-
-    # plt.figure()
-    # plt.imshow(img)
-    # plt.show()
         
     print('Complete')
     pass
