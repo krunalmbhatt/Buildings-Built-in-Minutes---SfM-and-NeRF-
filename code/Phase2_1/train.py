@@ -1,3 +1,12 @@
+## BUILDINGS BUILT IN MINUTES - PHASE 2
+# RBE 549 Computer Vision 
+# Under Guidance of Prof. Nitin Sanket
+
+#Coded  by Krunal M Bhatt
+# Date: March 7, 2024
+# Reference used for coding: https://github.com/murumura/NeRF-Simple/blob/main/src/models/nerf/NeRFSystem.py
+
+
 import torch
 import cv2
 import os

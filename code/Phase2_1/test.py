@@ -59,6 +59,7 @@ def main():
     depth = 8
 
     print('Hyperparams Done')
+    
     ###########################
     ###### Loading model ######
     ###########################
@@ -71,12 +72,21 @@ def main():
     print('checkpoint loaded')
 
 
+    ##########################
+    #### Loading dataset #####
+    ##########################
+
     test_path = './nerf_synthetic/lego/transforms_test.json'
     test_dataset = SyntheticNeRFDataset(test_path, img_dim=(400,400))
     test_loader = Torchdata.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     n_rays = len(test_loader)
 
     print('Test_loaded')
+
+
+    ##########################
+    ###### Testing Loop ######
+    ##########################
 
     image_bool = False
     output_img = []
@@ -91,6 +101,8 @@ def main():
             gen_imgs.append(output_img)
             output_img = []
         
+        print(i)
+
     print('halfway there')
     i = 0
     for g in gen_imgs:
@@ -123,6 +135,11 @@ def main():
         
     print('Complete')
     pass
+
+
+    ##########################
+    ###### Saving GIF #######
+    ##########################
 
     gif_out = './Phase2_1/output/lego.gif'
     gif_in = []
