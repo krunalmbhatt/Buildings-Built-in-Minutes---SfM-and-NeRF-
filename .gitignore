@@ -4,5 +4,4 @@ code/Phase1/Data
 *.pdf
 /code/nerf_synthetic/
 code/nerf_synthetic
-
-
+/__pycache__/
