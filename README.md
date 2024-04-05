@@ -1,4 +1,4 @@
-![NeRF Output](/nerf.gif)
+![NeRF Output](/Nerf.gif)
 
 # Phase 1: Structure From Motion (SfM)
 
