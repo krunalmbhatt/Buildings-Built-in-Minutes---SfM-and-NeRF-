@@ -1,4 +1,7 @@
-![NeRF Output](/Nerf.gif)
+# Output
+<div align="center">
+  <img src="/Nerf.gif" alt"NeRF Output">
+</div>
 
 # Phase 1: Structure From Motion (SfM)
 
