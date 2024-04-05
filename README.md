@@ -1,3 +1,5 @@
+![NeRF Output](/nerf.gif)
+
 # Phase 1: Structure From Motion (SfM)
 
 Run the wrapper.py file in phase 1 folder.
